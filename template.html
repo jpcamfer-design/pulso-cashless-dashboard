@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pulso Cashless · Tablero de eventos</title>
+<meta name="description" content="Tablero interactivo de operación de eventos con pagos cashless (datos simulados) con asistente de voz y chat de ElevenLabs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#f5f4ef; --panel:#ffffff; --ink:#16181d; --ink2:#4a4f5a; --ink3:#7a808c;
+  --line:#e2e0d8; --soft:#efede6; --accent:#0f5e4e; --accent-ink:#ffffff;
+  --warn:#b3261e; --warn-bg:#fbe9e7; --ok:#1b6e3a; --ok-bg:#e6f3ea;
+  --c-fest:#2f5fd0; --c-conc:#d0662a; --c-esc:#13877a; --c-act:#8a4fd6;
+  --c1:#2f5fd0; --c2:#d0662a; --c3:#13877a; --c4:#8a4fd6; --c5:#9aa0aa;
+  --shadow:0 1px 2px rgba(20,20,20,.05);
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121417; --panel:#1b1e23; --ink:#eceae4; --ink2:#b9bcc3; --ink3:#8b909a;
+    --line:#2c3038; --soft:#23272e; --accent:#4fc3a1; --accent-ink:#0d1512;
+    --warn:#ff8a80; --warn-bg:#3a1f1d; --ok:#7fd69b; --ok-bg:#18301f;
+    --c-fest:#7ea2ff; --c-conc:#ff9a5c; --c-esc:#3fc7b6; --c-act:#c49bff;
+    --c1:#7ea2ff; --c2:#ff9a5c; --c3:#3fc7b6; --c4:#c49bff; --c5:#7d838d;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121417; --panel:#1b1e23; --ink:#eceae4; --ink2:#b9bcc3; --ink3:#8b909a;
+  --line:#2c3038; --soft:#23272e; --accent:#4fc3a1; --accent-ink:#0d1512;
+  --warn:#ff8a80; --warn-bg:#3a1f1d; --ok:#7fd69b; --ok-bg:#18301f;
+  --c-fest:#7ea2ff; --c-conc:#ff9a5c; --c-esc:#3fc7b6; --c-act:#c49bff;
+  --c1:#7ea2ff; --c2:#ff9a5c; --c3:#3fc7b6; --c4:#c49bff; --c5:#7d838d;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45}
+a{color:var(--accent)}
+.wrap{max-width:1280px;margin:0 auto;padding:0 16px}
+header.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top-in{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;padding:12px 0}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);font-weight:700;font-family:var(--mono)}
+.brand h1{font-size:17px;margin:0;font-weight:600;letter-spacing:-.01em}
+.brand small{display:block;color:var(--ink3);font-size:12px}
+.badge{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:99px;border:1px solid var(--line);color:var(--ink2);background:var(--panel)}
+.badge.sim{border-color:var(--warn);color:var(--warn)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--ink2);border-radius:99px;padding:7px 12px;font:500 13px var(--sans);cursor:pointer;min-height:36px;display:inline-flex;align-items:center;gap:6px}
+.chip .dot{width:8px;height:8px;border-radius:50%}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+select,input[type=number]{font:500 13px var(--sans);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:36px}
+.btn{font:600 13px var(--sans);border-radius:8px;padding:9px 14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;min-height:38px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:focus-visible,.chip:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.active-filter{font-size:12px;color:var(--ink3);padding:0 0 10px}
+.active-filter b{color:var(--ink2)}
+main{padding:20px 0 60px}
+section{margin:0 0 28px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin:0 0 10px;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:10px}
+@media (max-width:600px){.kpis,.out{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi .v{font-size:19px}header.top{position:static}.brand h1{font-size:15px}.insights{grid-template-columns:1fr}}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow)}
+.kpi .l{font-size:12px;color:var(--ink3);display:flex;justify-content:space-between;gap:6px}
+.kpi .v{font-family:var(--mono);font-size:24px;font-weight:500;margin-top:4px;letter-spacing:-.02em}
+.kpi .s{font-size:12px;color:var(--ink2);margin-top:2px}
+.kpi.alert .v{color:var(--warn)}
+.insights{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.ins{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:14px;box-shadow:var(--shadow)}
+.ins.w{border-left-color:var(--warn)}
+.ins h3{margin:0 0 6px;font-size:15px;font-weight:600}
+.ins p{margin:4px 0;font-size:13px;color:var(--ink2)}
+.tag{font-family:var(--mono);font-size:10.5px;padding:1px 6px;border-radius:4px;background:var(--soft);color:var(--ink2);margin-right:4px;text-transform:uppercase;letter-spacing:.04em}
+.tag.obs{background:var(--ok-bg);color:var(--ok)}
+.tag.inf{background:#e8eefc;color:#2a4fae}
+.tag.sup{background:var(--warn-bg);color:var(--warn)}
+:root[data-theme="dark"] .tag.inf{background:#1f2a44;color:#9db6ff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tag.inf{background:#1f2a44;color:#9db6ff}}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow);min-width:0}
+.card h3{margin:0;font-size:16px;font-weight:600;letter-spacing:-.01em}
+.card .q{font-size:12.5px;color:var(--ink3);margin:2px 0 10px}
+.card .note{font-size:12px;color:var(--ink3);margin-top:8px}
+.chart{position:relative;height:300px}
+.chart.tall{height:380px}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--ink2);margin:0 0 6px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.calc{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:16px}
+@media (max-width:800px){.calc{grid-template-columns:1fr}}
+.calc label{display:block;font-size:12px;color:var(--ink3);margin:10px 0 4px}
+.calc select,.calc input{width:100%}
+.out{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.out .kpi .v{font-size:22px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:980px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3){text-align:left}
+th{font-size:11.5px;color:var(--ink3);font-weight:600;cursor:pointer;position:sticky;top:0;background:var(--panel)}
+td{font-family:var(--mono);font-size:12.5px}
+td.t{font-family:var(--sans)}
+tr:hover td{background:var(--soft)}
+td.bad{color:var(--warn);font-weight:500}
+.method{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.method .card p,.method .card li{font-size:13px;color:var(--ink2)}
+.method ul{margin:6px 0;padding-left:18px}
+.assist .card p{font-size:13px;color:var(--ink2)}
+.assist .status{font-size:12px;font-family:var(--mono);color:var(--ink3);margin-top:8px}
+.examples{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.examples span{font-size:12px;border:1px dashed var(--line);border-radius:6px;padding:4px 8px;color:var(--ink2)}
+footer{color:var(--ink3);font-size:12px;border-top:1px solid var(--line);padding:16px 0 40px}
+.sr{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="top-in">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">P</div>
+        <div>
+          <h1>Pulso Cashless · Tablero de operación de eventos</h1>
+          <small>Ventas, recargas, filas y terminales · ene–oct 2026 · MXN</small>
+        </div>
+        <span class="badge sim" title="Todas las cifras son simuladas">DATOS SIMULADOS</span>
+      </div>
+      <div class="filters" role="group" aria-label="Filtros">
+        <div class="chips" id="chipsTipo"></div>
+        <select id="fCiudad" aria-label="Ciudad"></select>
+        <select id="fEvento" aria-label="Evento"></select>
+        <button class="btn" id="btnTema" aria-label="Cambiar tema">◐</button>
+      </div>
+    </div>
+    <div class="active-filter" id="activeFilter"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section aria-labelledby="h-kpi">
+    <h2 id="h-kpi">Indicadores del periodo filtrado</h2>
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section aria-labelledby="h-ins">
+    <h2 id="h-ins">Hallazgos y acciones (se recalculan con los filtros)</h2>
+    <div class="insights" id="insights"></div>
+  </section>
+
+  <section aria-labelledby="h-dinero">
+    <h2 id="h-dinero">Dónde está el dinero</h2>
+    <div class="grid">
+      <div class="card">
+        <h3 id="tVentas">Pocos eventos concentran la mayor parte de las ventas</h3>
+        <p class="q">Ventas brutas por evento (MXN), ordenadas de mayor a menor</p>
+        <div class="legend" id="legTipo1"></div>
+        <div class="chart tall"><canvas id="chVentas" aria-label="Barras de ventas por evento"></canvas></div>
+      </div>
+      <div class="card">
+        <h3 id="tGasto">El gasto por pulsera depende sobre todo del tipo de evento</h3>
+        <p class="q">Gasto por pulsera activada (MXN) por evento; el rombo es el promedio ponderado del tipo</p>
+        <div class="legend" id="legTipo2"></div>
+        <div class="chart tall"><canvas id="chGasto" aria-label="Gasto por pulsera por evento"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-op">
+    <h2 id="h-op">Capacidad operativa: filas y horarios</h2>
+    <div class="grid">
+      <div class="card">
+        <h3 id="tFila">La fila en recarga crece casi linealmente con la carga por estación</h3>
+        <p class="q">Carga (pulseras ÷ estaciones ÷ horas de operación) vs. fila promedio en recarga (min)</p>
+        <div class="legend" id="legTipo3"></div>
+        <div class="chart"><canvas id="chFila" aria-label="Dispersión carga vs fila"></canvas></div>
+        <p class="note" id="nFila"></p>
+      </div>
+      <div class="card">
+        <h3 id="tFilaGasto">Los eventos con más fila gastan menos que el promedio de su tipo</h3>
+        <p class="q">Fila promedio (min) vs. índice de gasto (100 = promedio de su tipo de evento)</p>
+        <div class="legend" id="legTipo4"></div>
+        <div class="chart"><canvas id="chFilaGasto" aria-label="Dispersión fila vs índice de gasto"></canvas></div>
+        <p class="note" id="nFilaGasto"></p>
+      </div>
+      <div class="card">
+        <h3 id="tHora">Cada tipo de evento tiene su propia hora pico</h3>
+        <p class="q" id="qHora">% de las transacciones del tipo en cada hora del día</p>
+        <div class="legend" id="legTipo5"></div>
+        <div class="chart"><canvas id="chHora" aria-label="Curva horaria de transacciones"></canvas></div>
+      </div>
+      <div class="card">
+        <h3 id="tInc">Incidentes de terminal por cada 100 equipos desplegados</h3>
+        <p class="q">Fallas registradas ÷ terminales × 100 (eje desde cero)</p>
+        <div class="legend" id="legTipo6"></div>
+        <div class="chart"><canvas id="chInc" aria-label="Incidentes por 100 terminales"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-saldo">
+    <h2 id="h-saldo">Recargas, medios de pago y saldo no usado</h2>
+    <div class="grid">
+      <div class="card">
+        <h3 id="tSaldo">Las activaciones de marca dejan más saldo sin usar</h3>
+        <p class="q">Saldo no consumido como % de lo recargado, dividido en reembolsado y no reclamado (breakage)</p>
+        <div class="legend"><span><i style="background:var(--c5)"></i>Reembolsado</span><span><i style="background:var(--warn)"></i>No reclamado (breakage)</span></div>
+        <div class="chart tall"><canvas id="chSaldo" aria-label="Saldo no usado por evento"></canvas></div>
+      </div>
+      <div class="card">
+        <h3 id="tMetodo">En escuelas domina el efectivo; en activaciones, la cortesía</h3>
+        <p class="q">Mezcla de medios de recarga por tipo (% del monto recargado)</p>
+        <div class="legend"><span><i style="background:var(--c1)"></i>Tarjeta</span><span><i style="background:var(--c2)"></i>Efectivo</span><span><i style="background:var(--c3)"></i>En línea</span><span><i style="background:var(--c4)"></i>Cortesía de marca</span></div>
+        <div class="chart"><canvas id="chMetodo" aria-label="Mezcla de medios de recarga"></canvas></div>
+        <h3 style="margin-top:18px">Las bebidas son la categoría principal, salvo en escuelas</h3>
+        <p class="q">Mezcla de ventas por categoría y tipo (% de ventas)</p>
+        <div class="legend"><span><i style="background:var(--c1)"></i>Bebidas</span><span><i style="background:var(--c2)"></i>Alimentos</span><span><i style="background:var(--c3)"></i>Merch</span><span><i style="background:var(--c5)"></i>Otros</span></div>
+        <div class="chart" style="height:220px"><canvas id="chCat" aria-label="Mezcla por categoría"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-calc">
+    <h2 id="h-calc">Calculadora de dimensionamiento para el próximo evento</h2>
+    <div class="card">
+      <div class="calc">
+        <div>
+          <label for="cTipo">Tipo de evento</label>
+          <select id="cTipo"></select>
+          <label for="cAsis">Asistentes esperados</label>
+          <input id="cAsis" type="number" min="100" step="100" value="20000">
+          <label for="cDias">Días de operación</label>
+          <input id="cDias" type="number" min="1" max="5" step="1" value="1">
+          <label for="cFila">Fila objetivo en recarga (min)</label>
+          <input id="cFila" type="number" min="3" max="15" step="0.5" value="6">
+          <p class="note">Usa la recta fila = a + b × carga ajustada con los 16 eventos y las razones observadas por tipo. Es una estimación de un dataset simulado, no un estándar operativo.</p>
+        </div>
+        <div>
+          <div class="out" id="calcOut"></div>
+          <p class="note" id="calcNote"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-tabla">
+    <h2 id="h-tabla">Detalle por evento</h2>
+    <div class="tablewrap"><table id="tabla"><thead></thead><tbody></tbody></table></div>
+    <p class="note" style="font-size:12px;color:var(--ink3)">Clic en un encabezado para ordenar. En rojo: fila mayor al objetivo de 6 min.</p>
+  </section>
+
+  <section aria-labelledby="h-asis">
+    <h2 id="h-asis">Asistente de IA (ElevenLabs) · voz y texto</h2>
+    <div class="card">
+      <h3>Pulso · Asistente del tablero</h3>
+      <p class="q">Un solo agente de ElevenLabs. Su base de conocimiento (RAG) es el contenido de esta página: indicadores, detalle por evento, hallazgos, calculadora, guía de operación y metodología. Si algo no está en el tablero, lo dice en lugar de inventar.</p>
+      <p style="font-size:13px;color:var(--ink2)">Ábrelo con el botón de la esquina inferior derecha. Puedes <b>hablarle</b> (permite el micrófono) o <b>escribirle</b>.</p>
+      <div class="examples"><span>¿Qué evento vendió más?</span><span>¿Cuál fue la fila más larga y por qué importa?</span><span>¿Cuántas estaciones necesito para un concierto de 20 mil personas?</span><span>¿Qué es el breakage?</span><span>¿Cuál fue el ticket promedio de las escuelas?</span></div>
+      <p class="status" id="stAgente"></p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-guia">
+    <h2 id="h-guia">Guía de operación cashless</h2>
+    <div class="method">
+      <div class="card">
+        <h3>Cómo funciona</h3>
+        <ul>
+          <li>El asistente recibe una pulsera o tarjeta NFC; se <b>activa</b> al registrarla o cargarle saldo.</li>
+          <li>Recarga saldo antes o durante el evento y paga acercando la pulsera a una <b>terminal</b>.</li>
+          <li>El efectivo solo se recibe en las <b>estaciones de recarga</b>, nunca en barras ni puestos.</li>
+          <li>Ventajas: cobro más rápido, menos manejo de caja y datos de venta en tiempo real por punto, hora y producto.</li>
+          <li>Riesgos: conectividad y batería de terminales, filas en recarga y saldo no consumido.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Ciclo de un evento</h3>
+        <ul>
+          <li><b>Planeación:</b> asistentes, tipo, horario, puntos de venta y dimensionamiento con la calculadora.</li>
+          <li><b>Montaje:</b> pruebas de red, catálogo cargado, baterías al 100% y 5% de terminales de respaldo.</li>
+          <li><b>Capacitación</b> del staff del cliente: cobrar, revisar saldo y reportar fallas.</li>
+          <li><b>Operación:</b> estaciones abiertas 1 h antes de puertas; refuerzo de staff 1 h antes del pico.</li>
+          <li><b>Cierre:</b> arqueo de efectivo, conciliación por punto de venta y conteo de terminales.</li>
+          <li><b>Postevento:</b> reembolsos y reporte al cliente.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Recargas y reembolsos (política de ejemplo)</h3>
+        <ul>
+          <li>Medios: tarjeta, efectivo, recarga en línea previa y cortesía de marca.</li>
+          <li>Recarga mínima $100; montos sugeridos $200, $500 y $1,000.</li>
+          <li>Reembolso del saldo no usado durante 15 días, con comisión de $15. La cortesía de marca no es reembolsable.</li>
+          <li>El destino del breakage se pacta en el contrato con el organizador.</li>
+          <li>Escuelas: cajeros con fondo fijo y arqueos parciales cada 2 horas.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Terminales e incidentes</h3>
+        <ul>
+          <li>Fallas comunes: batería baja, sin señal, lector NFC que no responde, catálogo sin sincronizar.</li>
+          <li>Protocolo: reiniciar → red de respaldo → cambiar por terminal de respaldo → registrar hora, punto y causa.</li>
+          <li>Indicadores: uptime, incidentes por 100 terminales y tiempo medio de reparación (MTTR).</li>
+          <li>Modo sin conexión: sigue cobrando y sincroniza después; el saldo mostrado puede desfasarse.</li>
+          <li>Pulsera perdida: si está registrada, se bloquea y el saldo pasa a una nueva.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-met">
+    <h2 id="h-met">Metodología, supuestos y límites</h2>
+    <div class="method">
+      <div class="card">
+        <h3>Origen de los datos</h3>
+        <p><span class="tag sup">Supuesto</span>Los 16 eventos, la empresa “Pulso Cashless” y todas las cifras son <b>simulados</b> con un script en Python (semilla 42) para fines académicos.</p>
+        <p>Las relaciones carga → fila y fila → gasto <b>son supuestos programados en el simulador</b>; el tablero los “descubre”, pero no son evidencia del mundo real.</p>
+      </div>
+      <div class="card">
+        <h3>Cómo se calcula cada indicador</h3>
+        <ul>
+          <li><b>Activación</b> = pulseras activadas ÷ asistentes.</li>
+          <li><b>Gasto por pulsera</b> = ventas ÷ pulseras activadas (ponderado).</li>
+          <li><b>Ticket</b> = ventas ÷ transacciones.</li>
+          <li><b>Saldo no usado</b> = recargas − ventas; <b>breakage</b> = saldo no usado − reembolsos.</li>
+          <li><b>Carga</b> = pulseras ÷ (estaciones × horas de operación).</li>
+          <li><b>Fila</b> = promedio simple entre eventos.</li>
+          <li><b>Uptime</b> = promedio ponderado por terminales.</li>
+          <li><b>Ingreso plataforma</b> = 4.5% de ventas + $15 por pulsera (supuesto comercial).</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Lo que no se puede afirmar</h3>
+        <ul>
+          <li>Causalidad: la correlación fila–gasto es una relación construida, no probada.</li>
+          <li>Con n = 16 (y 3–5 por tipo), las comparaciones entre tipos son frágiles.</li>
+          <li>No hay datos de margen de los vendedores, costo de operación ni satisfacción del asistente.</li>
+          <li>La fila es un promedio por evento: no muestra la fila en el minuto pico.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Glosario</h3>
+        <ul>
+          <li><b>Cashless</b>: el asistente paga con una pulsera o tarjeta NFC precargada.</li>
+          <li><b>Estación de recarga</b>: punto donde se carga saldo (tarjeta, efectivo).</li>
+          <li><b>Terminal</b>: equipo de cobro en barras y puestos.</li>
+          <li><b>Breakage</b>: saldo recargado que nadie consume ni reclama.</li>
+          <li><b>Uptime</b>: % del tiempo en que la terminal funcionó.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  Proyecto académico · Tablero y datos simulados para la actividad de agentes de voz con ElevenLabs. No representa a ninguna empresa real.
+</footer>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+/* ===================== CONFIGURACIÓN DEL AGENTE =====================
+   Agent ID de ElevenLabs (Agents > tu agente > Widget). */
+const AGENT_ID = "agent_8301m6786zgxe6r95zpy36jq6n48";
+/* ==================================================================== */
+
+const D = JSON.parse(document.getElementById('data').textContent);
+const EV = D.eventos, HOR = D.horario, M = D.modelo, SUP = D.meta.supuestos;
+const TIPOS = ["Festival","Concierto","Escuela","Activación"];
+const TVAR = {"Festival":"--c-fest","Concierto":"--c-conc","Escuela":"--c-esc","Activación":"--c-act"};
+const state = {tipo:"Todos", ciudad:"Todas", evento:"Todos"};
+const charts = {};
+
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const colTipo = t => css(TVAR[t]);
+const sum = (a,f) => a.reduce((s,x)=>s+f(x),0);
+const mean = (a,f) => a.length ? sum(a,f)/a.length : NaN;
+const fmtM = n => { const a=Math.abs(n);
+  if(a>=1e6) return "$"+(n/1e6).toLocaleString("es-MX",{maximumFractionDigits:1})+" M";
+  if(a>=1e3) return "$"+(n/1e3).toLocaleString("es-MX",{maximumFractionDigits:0})+" mil";
+  return "$"+n.toLocaleString("es-MX",{maximumFractionDigits:0}); };
+const fmtN = (n,d=0) => n.toLocaleString("es-MX",{maximumFractionDigits:d,minimumFractionDigits:d});
+const pct = (n,d=1) => (n*100).toLocaleString("es-MX",{maximumFractionDigits:d,minimumFractionDigits:d})+"%";
+const median = arr => { const s=[...arr].sort((a,b)=>a-b), m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; };
+
+function filtrados(){
+  return EV.filter(e => (state.tipo==="Todos"||e.tipo===state.tipo)
+    && (state.ciudad==="Todas"||e.ciudad===state.ciudad)
+    && (state.evento==="Todos"||e.id===state.evento));
+}
+function agregados(es){
+  const ventas=sum(es,e=>e.ventas), pulseras=sum(es,e=>e.pulseras), asis=sum(es,e=>e.asistentes);
+  const rec=sum(es,e=>e.recargas), su=sum(es,e=>e.saldo_no_usado), br=sum(es,e=>e.breakage), re=sum(es,e=>e.reembolsos);
+  const tx=sum(es,e=>e.transacciones), term=sum(es,e=>e.terminales);
+  return {n:es.length, ventas, pulseras, asis, rec, su, br, re, tx, term,
+    act:pulseras/asis, gasto:ventas/pulseras, ticket:ventas/tx, suPct:su/rec,
+    fila:mean(es,e=>e.fila_min), uptime:sum(es,e=>e.uptime*e.terminales)/term,
+    inc:sum(es,e=>e.incidentes), ingreso:sum(es,e=>e.ingreso_plat)};
+}
+// Índice de gasto vs. promedio ponderado de su tipo (sobre los 16 eventos, no el filtro)
+const GASTO_TIPO = Object.fromEntries(TIPOS.map(t=>{const es=EV.filter(e=>e.tipo===t); return [t, sum(es,e=>e.ventas)/sum(es,e=>e.pulseras)];}));
+EV.forEach(e=>{ e.idx_gasto = e.gasto_pp/GASTO_TIPO[e.tipo]*100; e.inc100 = e.incidentes/e.terminales*100;
+  e.su_pct = e.saldo_no_usado/e.recargas; e.br_pct = e.breakage/e.recargas; e.re_pct = e.reembolsos/e.recargas;
+  e.est_req = Math.ceil(e.pulseras/(M.carga_max*e.horas_op)); });
+
+/* ---------------- filtros ---------------- */
+function buildFilters(){
+  const c = document.getElementById('chipsTipo');
+  ["Todos",...TIPOS].forEach(t=>{
+    const b=document.createElement('button'); b.className='chip'; b.type='button';
+    b.innerHTML=(t==="Todos"?"":`<span class="dot" style="background:var(${TVAR[t]})"></span>`)+t;
+    b.setAttribute('aria-pressed', t===state.tipo);
+    b.onclick=()=>{state.tipo=t; state.evento="Todos"; syncSelects(); render();};
+    b.dataset.t=t; c.appendChild(b);
+  });
+  document.getElementById('fCiudad').onchange=e=>{state.ciudad=e.target.value; state.evento="Todos"; syncSelects(); render();};
+  document.getElementById('fEvento').onchange=e=>{state.evento=e.target.value; render();};
+  syncSelects();
+}
+function syncSelects(){
+  const ciudades=[...new Set(EV.filter(e=>state.tipo==="Todos"||e.tipo===state.tipo).map(e=>e.ciudad))].sort();
+  if(state.ciudad!=="Todas" && !ciudades.includes(state.ciudad)) state.ciudad="Todas";
+  const fc=document.getElementById('fCiudad');
+  fc.innerHTML=`<option value="Todas">Todas las ciudades</option>`+ciudades.map(c=>`<option ${c===state.ciudad?'selected':''}>${c}</option>`).join('');
+  const evs=EV.filter(e=>(state.tipo==="Todos"||e.tipo===state.tipo)&&(state.ciudad==="Todas"||e.ciudad===state.ciudad));
+  const fe=document.getElementById('fEvento');
+  fe.innerHTML=`<option value="Todos">Todos los eventos (${evs.length})</option>`+evs.map(e=>`<option value="${e.id}" ${e.id===state.evento?'selected':''}>${e.nombre}</option>`).join('');
+  document.querySelectorAll('#chipsTipo .chip').forEach(b=>b.setAttribute('aria-pressed', b.dataset.t===state.tipo));
+}
+
+/* ---------------- KPIs ---------------- */
+function renderKPIs(es){
+  const a=agregados(es), g=agregados(EV);
+  const k=[
+    ["Ventas brutas", fmtM(a.ventas), `${a.n} evento${a.n>1?'s':''} · ${pct(a.ventas/g.ventas,0)} del total`],
+    ["Pulseras activadas", fmtN(a.pulseras), `Activación ${pct(a.act)} de ${fmtN(a.asis)} asistentes`],
+    ["Gasto por pulsera", "$"+fmtN(a.gasto), "Ventas ÷ pulseras activadas"],
+    ["Ticket promedio", "$"+fmtN(a.ticket), `${fmtN(a.tx)} transacciones`],
+    ["Saldo no usado", pct(a.suPct), `${fmtM(a.su)} de ${fmtM(a.rec)} recargados`],
+    ["Breakage neto", fmtM(a.br), `${pct(a.br/a.rec)} de recargas no reclamado`],
+    ["Fila promedio recarga", fmtN(a.fila,1)+" min", `Objetivo ≤ ${SUP.umbral_fila} min · promedio por evento`, a.fila>SUP.umbral_fila],
+    ["Uptime terminales", pct(a.uptime/100,2), `${a.inc} incidentes · ${fmtN(a.term)} terminales`],
+    ["Ingreso plataforma", fmtM(a.ingreso), "4.5% ventas + $15/pulsera (supuesto)"],
+  ];
+  document.getElementById('kpis').innerHTML=k.map(([l,v,s,al])=>`<div class="kpi ${al?'alert':''}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+}
+
+/* ---------------- Hallazgos ---------------- */
+function renderInsights(es){
+  const a=agregados(es), out=[];
+  const byV=[...es].sort((x,y)=>y.ventas-x.ventas);
+  if(es.length>1){
+    const top=byV[0], top3=byV.slice(0,Math.min(3,es.length));
+    out.push({t:`${top.nombre} genera ${pct(top.ventas/a.ventas,0)} de las ventas filtradas`,
+      o:`Top ${top3.length} eventos = ${pct(sum(top3,e=>e.ventas)/a.ventas,0)} de ${fmtM(a.ventas)} (campo ventas).`,
+      i:`El ingreso depende de pocos eventos grandes: perder uno mueve el año.`,
+      acc:`Priorizar la renovación de contrato y el staffing de los eventos top.`, ind:`% de ventas del top 3 por trimestre.`});
+  }
+  const sobre=es.filter(e=>e.fila_min>SUP.umbral_fila).sort((x,y)=>y.fila_min-x.fila_min);
+  if(sobre.length){
+    const faltan=sum(sobre,e=>Math.max(0,e.est_req-e.estaciones));
+    out.push({w:1,t:`${sobre.length} de ${es.length} eventos superaron la fila objetivo de ${SUP.umbral_fila} min`,
+      o:`Peor caso: ${sobre[0].nombre}, ${fmtN(sobre[0].fila_min,1)} min con carga de ${fmtN(sobre[0].carga)} personas/estación/h (campos fila_min, carga).`,
+      i:`Con la recta ajustada (R² = ${fmtN(M.r2,2)}), mantener ≤ ${SUP.umbral_fila} min exige carga ≤ ${fmtN(M.carga_max)}; faltaron ≈ ${faltan} estaciones en total en esos eventos.`,
+      acc:`Dimensionar estaciones con la calculadora antes de cotizar.`, ind:`% de eventos con fila ≤ ${SUP.umbral_fila} min.`});
+  } else if(es.length) {
+    out.push({t:`Todos los eventos filtrados cumplieron la fila objetivo`, o:`Fila máxima ${fmtN(Math.max(...es.map(e=>e.fila_min)),1)} min (campo fila_min).`,
+      i:`La capacidad de recarga fue suficiente para la carga observada.`, acc:`Revisar si hay estaciones de sobra que se puedan reasignar.`, ind:`Carga por estación vs. ${fmtN(M.carga_max)}.`});
+  }
+  if(es.length>2 && state.tipo==="Todos" && state.evento==="Todos"){
+    out.push({w:1,t:`Más fila coincide con menor gasto relativo (r = ${fmtN(M.r_fila_gasto,2)})`,
+      o:`Correlación entre fila_min e índice de gasto vs. su tipo, n = ${M.n}.`,
+      i:`Hipótesis: la fila resta tiempo de consumo. No demuestra causalidad.`, sup:`La relación está programada en el simulador.`,
+      acc:`Probar con datos reales: A/B de estaciones extra en eventos comparables.`, ind:`Gasto por pulsera en eventos con y sin refuerzo.`});
+  }
+  const suMax=[...es].sort((x,y)=>y.su_pct-x.su_pct)[0];
+  if(suMax){
+    out.push({t:`${suMax.nombre} dejó ${pct(suMax.su_pct)} de lo recargado sin usar`,
+      o:`${fmtM(suMax.saldo_no_usado)} no consumidos; se reembolsó ${pct(suMax.reembolsos/suMax.saldo_no_usado,0)} (campos saldo_no_usado, reembolsos).`,
+      i: suMax.tipo==="Activación" ? `La cortesía de marca se precarga y no siempre se gasta.` : `Recargas mayores al consumo real del asistente.`,
+      acc:`Ofrecer reembolso digital simple y montos de recarga sugeridos; acordar con el cliente el destino del breakage.`, ind:`Saldo no usado % y % reembolsado por evento.`});
+  }
+  const cash = sum(es,e=>e.recargas*e.metodo.Efectivo)/a.rec;
+  if(cash>0.3){
+    out.push({w:1,t:`El efectivo representa ${pct(cash,0)} de las recargas filtradas`,
+      o:`Mezcla de medios ponderada por monto recargado (campo metodo.Efectivo).`,
+      i:`Más efectivo implica más manejo de caja, arqueos y riesgo de faltantes.`,
+      acc:`Asignar cajeros con fondo fijo y promover la recarga en línea previa.`, ind:`% de recarga en línea antes del evento.`});
+  }
+  const incMax=[...es].sort((x,y)=>y.inc100-x.inc100)[0];
+  if(incMax && incMax.incidentes>0){
+    out.push({t:`${incMax.nombre}: ${fmtN(incMax.inc100,1)} incidentes por cada 100 terminales`,
+      o:`${incMax.incidentes} incidentes en ${incMax.terminales} terminales; uptime ${fmtN(incMax.uptime,2)}% (campos incidentes, uptime).`,
+      i:`Sin registro de causa no se sabe si fue hardware, red o batería.`,
+      acc:`Registrar la causa de cada incidente y llevar 5% de terminales de respaldo.`, ind:`Incidentes por 100 terminales y MTTR.`});
+  }
+  // Pico horario
+  const curva=curvaHoraria(es);
+  if(curva.peak) out.push({t:`La hora pico es ${curva.peak}`, o:`${pct(curva.peakShare)} de las transacciones ocurre en esa hora (campo horario).`,
+      i:`Los turnos de staff deben cubrir la hora previa y la del pico.`, acc:`Programar el 100% del staff de recarga 1 h antes del pico.`, ind:`Fila medida en la hora pico.`});
+  document.getElementById('insights').innerHTML = out.map(x=>`<div class="ins ${x.w?'w':''}"><h3>${x.t}</h3>
+    <p><span class="tag obs">Observado</span>${x.o}</p><p><span class="tag inf">Inferencia</span>${x.i}</p>
+    ${x.sup?`<p><span class="tag sup">Supuesto</span>${x.sup}</p>`:''}
+    <p><span class="tag">Acción</span>${x.acc}</p><p><span class="tag">Indicador</span>${x.ind}</p></div>`).join('');
+}
+
+/* ---------------- Gráficas ---------------- */
+function baseOpts(extra={}){
+  const ink2=css('--ink2'), line=css('--line');
+  return Object.assign({responsive:true, maintainAspectRatio:false, animation:{duration:250},
+    plugins:{legend:{display:false}, tooltip:{backgroundColor:css('--ink'), titleColor:css('--bg'), bodyColor:css('--bg'), padding:10}},
+    scales:{x:{grid:{color:line}, ticks:{color:ink2,font:{family:'IBM Plex Sans',size:11}}, border:{color:line}},
+            y:{grid:{color:line}, ticks:{color:ink2,font:{family:'IBM Plex Sans',size:11}}, border:{color:line}}}}, extra);
+}
+function mk(id,cfg){ if(charts[id]) charts[id].destroy(); charts[id]=new Chart(document.getElementById(id),cfg); }
+function legendTipos(){
+  const h=TIPOS.map(t=>`<span><i style="background:var(${TVAR[t]})"></i>${t}</span>`).join('');
+  [1,2,3,4,5,6].forEach(i=>{const el=document.getElementById('legTipo'+i); if(el) el.innerHTML=h;});
+}
+function curvaHoraria(es){
+  const labels=[]; for(let h=9;h<24;h++) labels.push(String(h).padStart(2,'0')+":00");
+  const tot={}; labels.forEach(l=>tot[l]=0);
+  es.forEach(e=>HOR[e.id].horas.forEach((h,i)=>tot[h]+=HOR[e.id].tx[i]));
+  const T=sum(labels,l=>tot[l]); if(!T) return {};
+  const peak=labels.reduce((p,l)=>tot[l]>tot[p]?l:p,labels[0]);
+  return {labels, tot, peak, peakShare:tot[peak]/T};
+}
+function renderCharts(es){
+  const ids=new Set(es.map(e=>e.id));
+  const dim = (e,c)=> ids.has(e.id) ? c : c+'33';
+  // 1. Ventas por evento
+  const sv=[...EV].sort((a,b)=>b.ventas-a.ventas);
+  mk('chVentas',{type:'bar',data:{labels:sv.map(e=>e.nombre),datasets:[{data:sv.map(e=>e.ventas),backgroundColor:sv.map(e=>dim(e,colTipo(e.tipo))),borderRadius:3}]},
+    options:baseOpts({indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmtM(c.raw)} · ${sv[c.dataIndex].tipo}`}}},
+      scales:{x:{beginAtZero:true,grid:{color:css('--line')},ticks:{color:css('--ink2'),callback:v=>fmtM(v)}},y:{grid:{display:false},ticks:{color:css('--ink2'),font:{size:11}}}}})});
+  // 2. Gasto por pulsera (dot plot agrupado por tipo)
+  const sg=[...EV].sort((a,b)=>TIPOS.indexOf(a.tipo)-TIPOS.indexOf(b.tipo)||b.gasto_pp-a.gasto_pp);
+  mk('chGasto',{type:'bar',data:{labels:sg.map(e=>e.nombre),datasets:[
+      {type:'scatter',label:'Promedio del tipo',data:sg.map((e,i)=>({y:i,x:GASTO_TIPO[e.tipo]})),pointStyle:'rectRot',pointRadius:5,backgroundColor:css('--ink3'),borderColor:css('--ink3')},
+      {label:'Gasto por pulsera',data:sg.map(e=>e.gasto_pp),backgroundColor:sg.map(e=>dim(e,colTipo(e.tipo))),borderRadius:3,barThickness:10}]},
+    options:baseOpts({indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.type==='scatter'?` Promedio ${sg[c.dataIndex].tipo}: $${fmtN(c.raw.x)}`:` $${fmtN(c.raw)} por pulsera`}}},
+      scales:{x:{beginAtZero:true,grid:{color:css('--line')},ticks:{color:css('--ink2'),callback:v=>'$'+v}},y:{type:'category',grid:{display:false},ticks:{color:css('--ink2'),font:{size:11}}}}})});
+  // 3. Carga vs fila
+  const xs=EV.map(e=>e.carga), xmax=Math.ceil(Math.max(...xs)*1.05/20)*20;
+  mk('chFila',{type:'scatter',data:{datasets:[
+      {label:'Recta ajustada',type:'line',data:[{x:0,y:M.a},{x:xmax,y:M.a+M.b*xmax}],borderColor:css('--ink3'),borderDash:[5,4],borderWidth:1.5,pointRadius:0},
+      {label:'Objetivo',type:'line',data:[{x:0,y:SUP.umbral_fila},{x:xmax,y:SUP.umbral_fila}],borderColor:css('--warn'),borderWidth:1,pointRadius:0},
+      {label:'Eventos',data:EV.map(e=>({x:e.carga,y:e.fila_min,e})),backgroundColor:EV.map(e=>dim(e,colTipo(e.tipo))),pointRadius:EV.map(e=>ids.has(e.id)?6:4),pointHoverRadius:8}]},
+    options:baseOpts({plugins:{legend:{display:false},tooltip:{filter:i=>i.datasetIndex===2,callbacks:{label:c=>` ${c.raw.e.nombre}: ${fmtN(c.raw.y,1)} min, carga ${fmtN(c.raw.x)}`}}},
+      scales:{x:{min:0,max:xmax,title:{display:true,text:'Carga (personas por estación por hora)',color:css('--ink3')},grid:{color:css('--line')},ticks:{color:css('--ink2')}},
+              y:{min:0,title:{display:true,text:'Fila (min)',color:css('--ink3')},grid:{color:css('--line')},ticks:{color:css('--ink2')}}}})});
+  document.getElementById('nFila').innerHTML=`<span class="tag inf">Inferencia</span>Recta: fila = ${fmtN(M.a,2)} + ${fmtN(M.b,4)} × carga (R² = ${fmtN(M.r2,3)}, n = ${M.n}). Para fila ≤ ${SUP.umbral_fila} min la carga debe ser ≤ ${fmtN(M.carga_max,1)}. Línea roja = objetivo.`;
+  // 4. Fila vs índice de gasto
+  mk('chFilaGasto',{type:'scatter',data:{datasets:[
+      {label:'100',type:'line',data:[{x:0,y:100},{x:16,y:100}],borderColor:css('--ink3'),borderDash:[4,4],borderWidth:1,pointRadius:0},
+      {label:'Eventos',data:EV.map(e=>({x:e.fila_min,y:e.idx_gasto,e})),backgroundColor:EV.map(e=>dim(e,colTipo(e.tipo))),pointRadius:EV.map(e=>ids.has(e.id)?6:4),pointHoverRadius:8}]},
+    options:baseOpts({plugins:{legend:{display:false},tooltip:{filter:i=>i.datasetIndex===1,callbacks:{label:c=>` ${c.raw.e.nombre}: fila ${fmtN(c.raw.x,1)} min, índice ${fmtN(c.raw.y)}`}}},
+      scales:{x:{min:0,max:16,title:{display:true,text:'Fila promedio (min)',color:css('--ink3')},grid:{color:css('--line')},ticks:{color:css('--ink2')}},
+              y:{min:60,max:130,title:{display:true,text:'Índice de gasto (100 = su tipo) · eje desde 60',color:css('--ink3')},grid:{color:css('--line')},ticks:{color:css('--ink2')}}}})});
+  document.getElementById('nFilaGasto').innerHTML=`<span class="tag sup">Supuesto</span>r = ${fmtN(M.r_fila_gasto,2)}. Relación programada en el simulador (−2.5% de gasto por minuto de fila arriba de 5 min). Es una hipótesis a validar con datos reales, no una causa probada.`;
+  // 5. Curva horaria
+  let dsH, labels;
+  if(state.evento!=="Todos"){
+    const e=EV.find(x=>x.id===state.evento); labels=HOR[e.id].horas;
+    dsH=[{label:e.nombre,data:HOR[e.id].tx,borderColor:colTipo(e.tipo),backgroundColor:colTipo(e.tipo)+'22',fill:true,tension:.35,pointRadius:2}];
+    document.getElementById('qHora').textContent=`Transacciones por hora del día · ${e.nombre} (suma de ${e.dias} día${e.dias>1?'s':''})`;
+  } else {
+    labels=[]; for(let h=9;h<24;h++) labels.push(String(h).padStart(2,'0')+":00");
+    const tiposEnFiltro=TIPOS.filter(t=>es.some(e=>e.tipo===t));
+    dsH=tiposEnFiltro.map(t=>{const et=es.filter(e=>e.tipo===t); const tot={}; labels.forEach(l=>tot[l]=0);
+      et.forEach(e=>HOR[e.id].horas.forEach((h,i)=>tot[h]+=HOR[e.id].tx[i])); const T=sum(labels,l=>tot[l]);
+      return {label:t,data:labels.map(l=>tot[l]/T*100),borderColor:colTipo(t),backgroundColor:colTipo(t),tension:.35,pointRadius:0,borderWidth:2.2};});
+    document.getElementById('qHora').textContent='% de las transacciones del tipo en cada hora del día (eventos filtrados)';
+  }
+  mk('chHora',{type:'line',data:{labels,datasets:dsH},options:baseOpts({interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>state.evento!=="Todos"?` ${fmtN(c.raw)} transacciones`:` ${c.dataset.label}: ${fmtN(c.raw,1)}%`}}},
+    scales:{x:{grid:{display:false},ticks:{color:css('--ink2'),maxRotation:0,autoSkip:true}},y:{beginAtZero:true,grid:{color:css('--line')},ticks:{color:css('--ink2'),callback:v=>state.evento!=="Todos"?fmtN(v):v+'%'}}}})});
+  // 6. Incidentes por 100 terminales
+  const si=[...EV].sort((a,b)=>b.inc100-a.inc100);
+  mk('chInc',{type:'bar',data:{labels:si.map(e=>e.nombre),datasets:[{data:si.map(e=>e.inc100),backgroundColor:si.map(e=>dim(e,colTipo(e.tipo))),borderRadius:3}]},
+    options:baseOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmtN(c.raw,1)} por 100 · ${si[c.dataIndex].incidentes} de ${si[c.dataIndex].terminales} · uptime ${fmtN(si[c.dataIndex].uptime,2)}%`}}},
+      scales:{x:{grid:{display:false},ticks:{color:css('--ink2'),font:{size:10},maxRotation:60,minRotation:45}},y:{beginAtZero:true,grid:{color:css('--line')},ticks:{color:css('--ink2')}}}})});
+  // 7. Saldo no usado (apilado: reembolsado + breakage = saldo no usado)
+  const ss=[...EV].sort((a,b)=>b.su_pct-a.su_pct);
+  mk('chSaldo',{type:'bar',data:{labels:ss.map(e=>e.nombre),datasets:[
+      {label:'Reembolsado',data:ss.map(e=>e.re_pct*100),backgroundColor:ss.map(e=>dim(e,css('--c5'))),borderRadius:2},
+      {label:'Breakage',data:ss.map(e=>e.br_pct*100),backgroundColor:ss.map(e=>dim(e,css('--warn'))),borderRadius:2}]},
+    options:baseOpts({indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmtN(c.raw,1)}% de recargas`,footer:it=>{const e=ss[it[0].dataIndex];return `Total no usado: ${pct(e.su_pct)} (${fmtM(e.saldo_no_usado)})`;}}}},
+      scales:{x:{stacked:true,beginAtZero:true,grid:{color:css('--line')},ticks:{color:css('--ink2'),callback:v=>v+'%'}},y:{stacked:true,grid:{display:false},ticks:{color:css('--ink2'),font:{size:11}}}}})});
+  // 8. Método de recarga y 9. Categorías (100% apilado por tipo, ponderado por monto)
+  const grupos = state.evento!=="Todos" ? es.map(e=>({nom:e.nombre,es:[e]})) : TIPOS.filter(t=>es.some(e=>e.tipo===t)).map(t=>({nom:t,es:es.filter(e=>e.tipo===t)}));
+  const mix=(campo,peso,k)=>grupos.map(g=>sum(g.es,e=>e[peso]*e[campo][k])/sum(g.es,e=>e[peso])*100);
+  const stack100=(id,campo,peso,keys,cols,names)=>mk(id,{type:'bar',data:{labels:grupos.map(g=>g.nom),datasets:keys.map((k,i)=>({label:names[i],data:mix(campo,peso,k),backgroundColor:cols[i],borderRadius:2}))},
+    options:baseOpts({indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmtN(c.raw,1)}%`}}},
+      scales:{x:{stacked:true,min:0,max:100,grid:{color:css('--line')},ticks:{color:css('--ink2'),callback:v=>v+'%'}},y:{stacked:true,grid:{display:false},ticks:{color:css('--ink2')}}}})});
+  stack100('chMetodo','metodo','recargas',['Tarjeta','Efectivo','Online','Cortesia'],[css('--c1'),css('--c2'),css('--c3'),css('--c4')],['Tarjeta','Efectivo','En línea','Cortesía']);
+  stack100('chCat','cat','ventas',['Bebidas','Alimentos','Merch','Otros'],[css('--c1'),css('--c2'),css('--c3'),css('--c5')],['Bebidas','Alimentos','Merch','Otros']);
+}
+
+/* ---------------- Tabla ---------------- */
+const COLS=[["nombre","Evento",e=>e.nombre,'t'],["tipo","Tipo",e=>e.tipo,'t'],["ciudad","Ciudad",e=>e.ciudad,'t'],["fecha","Fecha",e=>e.fecha],
+ ["asistentes","Asistentes",e=>fmtN(e.asistentes)],["pulseras","Pulseras",e=>fmtN(e.pulseras)],["ventas","Ventas",e=>"$"+fmtN(e.ventas)],
+ ["gasto_pp","Gasto/pulsera",e=>"$"+fmtN(e.gasto_pp)],["ticket","Ticket",e=>"$"+fmtN(e.ticket)],["estaciones","Estaciones",e=>e.estaciones],
+ ["terminales","Terminales",e=>e.terminales],["carga","Carga",e=>fmtN(e.carga,1)],["fila_min","Fila (min)",e=>fmtN(e.fila_min,1)],
+ ["su_pct","Saldo no usado",e=>pct(e.su_pct)],["uptime","Uptime",e=>fmtN(e.uptime,2)+"%"],["incidentes","Incid.",e=>e.incidentes],["pico","Pico",e=>e.pico]];
+let sortK="ventas", sortD=-1;
+function renderTabla(es){
+  const t=document.getElementById('tabla');
+  t.tHead.innerHTML='<tr>'+COLS.map(([k,l])=>`<th scope="col" data-k="${k}" aria-sort="${k===sortK?(sortD>0?'ascending':'descending'):'none'}">${l}${k===sortK?(sortD>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>';
+  t.tHead.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k; sortD = k===sortK ? -sortD : -1; sortK=k; renderTabla(filtrados());});
+  const rows=[...es].sort((a,b)=>(a[sortK]>b[sortK]?1:a[sortK]<b[sortK]?-1:0)*sortD);
+  t.tBodies[0].innerHTML=rows.map(e=>'<tr>'+COLS.map(([k,,f,c])=>`<td class="${c||''} ${k==='fila_min'&&e.fila_min>SUP.umbral_fila?'bad':''}">${f(e)}</td>`).join('')+'</tr>').join('');
+}
+
+/* ---------------- Calculadora ---------------- */
+function buildCalc(){
+  const s=document.getElementById('cTipo'); s.innerHTML=TIPOS.map(t=>`<option>${t}</option>`).join('');
+  s.value="Concierto";
+  ['cTipo','cAsis','cDias','cFila'].forEach(id=>document.getElementById(id).addEventListener('input',renderCalc));
+  renderCalc();
+}
+function renderCalc(){
+  const t=document.getElementById('cTipo').value, A=Math.max(0,+document.getElementById('cAsis').value||0),
+        d=Math.max(1,+document.getElementById('cDias').value||1), f=+document.getElementById('cFila').value||SUP.umbral_fila;
+  const es=EV.filter(e=>e.tipo===t);
+  const act=sum(es,e=>e.pulseras)/sum(es,e=>e.asistentes);
+  const horasDia=median(es.map(e=>e.horas_op/e.dias)), horas=horasDia*d;
+  const P=A*act;
+  const cargaObj=(f-M.a)/M.b;
+  const est = cargaObj>0 ? Math.ceil(P/(cargaObj*horas)) : NaN;
+  const ratioT=median(es.map(e=>e.pulseras/e.terminales));
+  const term=Math.ceil(P/ratioT*1.05);
+  const staff=Math.round(est*3+term*1.1);
+  const g=es.map(e=>e.gasto_pp).sort((a,b)=>a-b);
+  const gMin=g[0], gMax=g[g.length-1];
+  const out=[
+    ["Pulseras esperadas",fmtN(P),`Activación ${pct(act)} (prom. ${t})`],
+    ["Estaciones de recarga",isNaN(est)?"—":fmtN(est),`Carga máx. ${fmtN(cargaObj,1)} p/est/h · ${fmtN(horas)} h`],
+    ["Terminales de venta",fmtN(term),`${fmtN(ratioT)} pulseras/terminal + 5% respaldo`],
+    ["Staff estimado",isNaN(staff)?"—":fmtN(staff),"3 por estación + 1.1 por terminal"],
+    ["Ventas esperadas",`${fmtM(P*gMin)} – ${fmtM(P*gMax)}`,`Rango de gasto observado: $${fmtN(gMin)}–$${fmtN(gMax)}`],
+    ["Ingreso plataforma",`${fmtM(P*gMin*SUP.comision+P*SUP.fee_pulsera)} – ${fmtM(P*gMax*SUP.comision+P*SUP.fee_pulsera)}`,"4.5% + $15/pulsera"],
+  ];
+  document.getElementById('calcOut').innerHTML=out.map(([l,v,s])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+  document.getElementById('calcNote').innerHTML = cargaObj<=0 ? `<span class="tag sup">Límite</span>La fila objetivo es menor que el mínimo de la recta (${fmtN(M.a,1)} min); no se puede dimensionar.` :
+    `<span class="tag sup">Límite</span>Basado en ${es.length} eventos de tipo ${t} (simulados). La recta sólo es confiable dentro del rango de carga observado (${fmtN(Math.min(...EV.map(e=>e.carga)))}–${fmtN(Math.max(...EV.map(e=>e.carga)))}).`;
+}
+
+/* ---------------- Widget ElevenLabs ---------------- */
+(function montarAgente(){
+  const st=document.getElementById('stAgente');
+  if(!AGENT_ID || AGENT_ID.startsWith('PEGA_AQUI')){ st.textContent='Falta configurar el Agent ID (constante AGENT_ID).'; return; }
+  const w=document.createElement('elevenlabs-convai'); w.setAttribute('agent-id',AGENT_ID); document.body.appendChild(w);
+  const s=document.createElement('script'); s.src='https://unpkg.com/@elevenlabs/convai-widget-embed'; s.async=true; s.type='text/javascript';
+  s.onerror=()=>st.textContent='No se pudo cargar el widget (revisa tu conexión o bloqueadores).';
+  s.onload=()=>st.textContent='Asistente listo: botón en la esquina inferior derecha.';
+  document.body.appendChild(s);
+})();
+
+/* ---------------- Tema y render ---------------- */
+document.getElementById('btnTema').onclick=()=>{
+  const r=document.documentElement, dark = r.dataset.theme ? r.dataset.theme==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = dark ? 'light' : 'dark'; render();
+};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+function render(){
+  const es=filtrados();
+  const partes=[state.tipo!=="Todos"?`tipo <b>${state.tipo}</b>`:null, state.ciudad!=="Todas"?`ciudad <b>${state.ciudad}</b>`:null,
+    state.evento!=="Todos"?`evento <b>${EV.find(e=>e.id===state.evento).nombre}</b>`:null].filter(Boolean);
+  document.getElementById('activeFilter').innerHTML = `Filtro activo: ${partes.length?partes.join(' · '):'<b>todos los eventos</b>'} · ${es.length} de ${EV.length} eventos · las gráficas de evento atenúan lo que queda fuera del filtro`;
+  if(!es.length){ document.getElementById('kpis').innerHTML='<p>Sin eventos para este filtro.</p>'; return; }
+  renderKPIs(es); renderInsights(es); renderCharts(es); renderTabla(es);
+}
+legendTipos(); buildFilters(); buildCalc(); render();
+</script>
+</body>
+</html>
